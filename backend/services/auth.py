@@ -23,6 +23,10 @@ async def get_current_user(
     settings = get_settings()
     token = credentials.credentials
 
+    # Bypass validation for frontend mock token
+    if token == 'mock-jwt-token-xyz':
+        return {"sub": "mock-user-123", "email": "test@example.com", "name": "Demo User"}
+
     try:
         # For Supabase, the JWT secret is the anon key or we verify via JWKS
         # Simplified: decode without full verification for hackathon

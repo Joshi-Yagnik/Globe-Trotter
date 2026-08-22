@@ -15,6 +15,8 @@ router = APIRouter(prefix="/api/destinations", tags=["Destinations"])
 async def list_destinations(
     search: Optional[str] = Query(None),
     region: Optional[str] = Query(None),
+    travel_type: Optional[str] = Query(None),
+    budget: Optional[str] = Query(None),
     sort_by: str = Query("popularity"),
     limit: int = Query(20, le=50),
     db: AsyncSession = Depends(get_db),
@@ -27,17 +29,35 @@ async def list_destinations(
             or_(
                 Destination.name.ilike(f"%{search}%"),
                 Destination.country.ilike(f"%{search}%"),
+                Destination.state.ilike(f"%{search}%"),
             )
         )
     if region:
         query = query.where(Destination.region == region)
+    
+    if travel_type:
+        query = query.where(Destination.travel_type.ilike(f"%{travel_type}%"))
+        
+    if budget:
+        if budget == "Budget":
+            query = query.where(Destination.avg_budget < 50)
+        elif budget == "Moderate":
+            query = query.where(Destination.avg_budget >= 50, Destination.avg_budget <= 100)
+        elif budget == "Premium":
+            query = query.where(Destination.avg_budget > 100, Destination.avg_budget <= 200)
+        elif budget == "Luxury":
+            query = query.where(Destination.avg_budget > 200)
 
     if sort_by == "popularity":
         query = query.order_by(Destination.popularity.desc())
     elif sort_by == "budget_low":
         query = query.order_by(Destination.avg_budget.asc())
-    elif sort_by == "name":
+    elif sort_by == "budget_high":
+        query = query.order_by(Destination.avg_budget.desc())
+    elif sort_by == "name_asc":
         query = query.order_by(Destination.name.asc())
+    elif sort_by == "name_desc":
+        query = query.order_by(Destination.name.desc())
     else:
         query = query.order_by(Destination.popularity.desc())
 

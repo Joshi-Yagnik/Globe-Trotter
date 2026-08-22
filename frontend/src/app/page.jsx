@@ -2,35 +2,31 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getDestinations, getTrips } from '@/lib/api';
+import { Search, MapPin, Compass, Star, TrendingUp, Sparkles, Navigation, Calendar } from 'lucide-react';
 
 const REGIONS = [
-  { value: '', label: 'All', emoji: '🌐' },
-  { value: 'asia', label: 'Asia', emoji: '🏯' },
-  { value: 'europe', label: 'Europe', emoji: '🏰' },
-  { value: 'americas', label: 'Americas', emoji: '🗽' },
-  { value: 'middle_east', label: 'Middle East', emoji: '🕌' },
-  { value: 'africa', label: 'Africa', emoji: '🌍' },
+  { value: '', label: 'All Regions' },
+  { value: 'asia', label: 'Asia' },
+  { value: 'europe', label: 'Europe' },
+  { value: 'americas', label: 'Americas' },
+  { value: 'middle_east', label: 'Middle East' },
+  { value: 'africa', label: 'Africa' },
 ];
 
-const DEST_GRADIENTS = [
-  'from-[#0c1019] to-[#1a3a4a]', 'from-[#0c1019] to-[#2a1a3e]',
-  'from-[#0c1019] to-[#3a2a1a]', 'from-[#0c1019] to-[#1a2a3a]',
-  'from-[#0c1019] to-[#2a3a1a]', 'from-[#0c1019] to-[#3a1a2a]',
-  'from-[#0c1019] to-[#1a3a2a]', 'from-[#0c1019] to-[#2a1a2a]',
+const DEST_IMAGES = [
+  'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?q=80&w=2020&auto=format&fit=crop', // Paris
+  'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=1994&auto=format&fit=crop', // Tokyo
+  'https://images.unsplash.com/photo-1537996194471-e657df975ab4?q=80&w=2038&auto=format&fit=crop', // Bali
+  'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=2070&auto=format&fit=crop', // NYC
+  'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?q=80&w=2070&auto=format&fit=crop', // Dubai
+  'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2021&auto=format&fit=crop', // Santorini
 ];
-
-const DEST_EMOJIS = { asia: '🏯', europe: '🏰', americas: '🗽', africa: '🌍', oceania: '🏝️', middle_east: '🕌' };
-const STATUS_EMOJIS = { draft: '📝', planned: '📋', ongoing: '✈️', completed: '✅', cancelled: '❌' };
 
 const FALLBACK_DESTINATIONS = [
   { id: 1, name: 'Paris', country: 'France', region: 'europe', avg_budget: 2500, popularity: 95 },
   { id: 2, name: 'Tokyo', country: 'Japan', region: 'asia', avg_budget: 3000, popularity: 92 },
   { id: 3, name: 'Bali', country: 'Indonesia', region: 'asia', avg_budget: 1500, popularity: 88 },
-  { id: 4, name: 'New York City', country: 'United States', region: 'americas', avg_budget: 3500, popularity: 90 },
-  { id: 5, name: 'Dubai', country: 'UAE', region: 'middle_east', avg_budget: 2800, popularity: 85 },
-  { id: 6, name: 'Santorini', country: 'Greece', region: 'europe', avg_budget: 2200, popularity: 82 },
-  { id: 7, name: 'Jaipur', country: 'India', region: 'asia', avg_budget: 800, popularity: 78 },
-  { id: 8, name: 'Maldives', country: 'Maldives', region: 'asia', avg_budget: 4000, popularity: 87 },
+  { id: 4, name: 'New York', country: 'USA', region: 'americas', avg_budget: 3500, popularity: 90 },
 ];
 
 export default function LandingPage() {
@@ -38,7 +34,6 @@ export default function LandingPage() {
   const [trips, setTrips] = useState([]);
   const [search, setSearch] = useState('');
   const [region, setRegion] = useState('');
-  const [sortBy, setSortBy] = useState('popularity');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => { loadData(); }, []);
@@ -46,139 +41,192 @@ export default function LandingPage() {
   async function loadData() {
     try {
       const [dests, tripsData] = await Promise.all([
-        getDestinations({ sort_by: sortBy, ...(region && { region }), ...(search && { search }) }).catch(() => FALLBACK_DESTINATIONS),
+        getDestinations({ sort_by: 'popularity' }).catch(() => FALLBACK_DESTINATIONS),
         getTrips({}).catch(() => []),
       ]);
-      setDestinations(Array.isArray(dests) ? dests : FALLBACK_DESTINATIONS);
+      setDestinations(Array.isArray(dests) && dests.length ? dests : FALLBACK_DESTINATIONS);
       setTrips(Array.isArray(tripsData) ? tripsData : []);
-    } catch { setDestinations(FALLBACK_DESTINATIONS); }
+    } catch { 
+      setDestinations(FALLBACK_DESTINATIONS); 
+    }
     setLoading(false);
   }
 
-  async function filterDestinations(newRegion, newSort, newSearch) {
-    const r = newRegion ?? region;
-    const s = newSort ?? sortBy;
-    const q = newSearch ?? search;
-    try {
-      const dests = await getDestinations({ sort_by: s, ...(r && { region: r }), ...(q && { search: q }) });
-      setDestinations(Array.isArray(dests) ? dests : FALLBACK_DESTINATIONS);
-    } catch { setDestinations(FALLBACK_DESTINATIONS); }
-  }
-
   return (
-    <div className="max-w-[1400px] mx-auto px-6 py-8 animate-fade-in">
-      {/* Hero */}
-      <div className="relative h-[400px] rounded-3xl overflow-hidden mb-12 bg-gradient-to-br from-[#0c1019] via-[#1a1a3e] to-[#0c1019]">
-        <div className="absolute inset-0 bg-gradient-to-t from-[#06080f] via-transparent to-[#06080f]/30" />
-        <div className="absolute bottom-12 left-12 z-10">
-          <h1 className="text-5xl font-heading font-extrabold mb-2 gradient-text">Explore the World</h1>
-          <p className="text-white/60 text-lg max-w-[500px] mb-6">
-            Plan your perfect trip with AI-powered suggestions, build detailed itineraries, and share adventures.
-          </p>
-          <Link href="/trips/new" className="inline-flex items-center gap-2 px-8 py-3 rounded-xl font-semibold gradient-btn hover:-translate-y-0.5 hover:shadow-[0_0_40px_rgba(0,212,170,0.3)] transition-all">
-            ✨ Start Planning
-          </Link>
+    <div className="animate-fade-in pb-20">
+      {/* Cinematic Hero */}
+      <section className="relative h-[85vh] min-h-[600px] w-full flex items-center justify-center overflow-hidden">
+        {/* Background Image & Overlay */}
+        <div className="absolute inset-0 z-0">
+          <img 
+            src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2021&auto=format&fit=crop" 
+            alt="Travel Landscape" 
+            className="w-full h-full object-cover opacity-60"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#07111F]/30 via-[#07111F]/60 to-[#07111F] pointer-events-none" />
         </div>
-      </div>
 
-      {/* Search & Filter */}
-      <div className="flex flex-wrap items-center gap-3 p-3 glass-card mb-8">
-        <div className="flex-1 min-w-[200px] relative">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30">🔍</span>
-          <input type="text" placeholder="Search destinations..." value={search}
-            onChange={(e) => { setSearch(e.target.value); filterDestinations(null, null, e.target.value); }}
-            className="w-full py-2 pl-10 pr-4 bg-white/[0.06] border border-transparent rounded-xl text-white text-sm outline-none focus:border-teal-400 transition-all" />
-        </div>
-        <div className="flex gap-1 flex-wrap">
-          {REGIONS.map((r) => (
-            <button key={r.value}
-              onClick={() => { setRegion(r.value); filterDestinations(r.value); }}
-              className={`px-3 py-1 rounded-full text-xs font-medium border transition-all whitespace-nowrap
-                ${region === r.value ? 'text-teal-400 border-teal-400 bg-teal-400/15' : 'text-white/50 border-white/[0.08] bg-white/[0.06] hover:text-teal-400'}`}>
-              {r.emoji} {r.label}
-            </button>
-          ))}
-        </div>
-        <div className="flex gap-1">
-          {[{ v: 'popularity', l: '🔥 Popular' }, { v: 'budget_low', l: '💰 Budget' }, { v: 'name', l: '🔤 A-Z' }].map((s) => (
-            <button key={s.v} onClick={() => { setSortBy(s.v); filterDestinations(null, s.v); }}
-              className={`px-3 py-1 rounded-full text-xs font-medium border transition-all
-                ${sortBy === s.v ? 'text-teal-400 border-teal-400 bg-teal-400/15' : 'text-white/50 border-white/[0.08] bg-white/[0.06]'}`}>
-              {s.l}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Top Regional Selections */}
-      <section className="mb-12">
-        <h2 className="text-2xl font-heading font-bold mb-6">Top <span className="gradient-text">Regional Selections</span></h2>
-        {loading ? (
-          <div className="flex justify-center py-16"><div className="w-10 h-10 border-3 border-white/[0.08] border-t-teal-400 rounded-full animate-spin" /></div>
-        ) : (
-          <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-thin">
-            {destinations.map((dest, i) => (
-              <Link href={`/trips/new?dest=${dest.id}&name=${encodeURIComponent(dest.name)}`} key={dest.id}
-                className="min-w-[250px] relative rounded-2xl overflow-hidden cursor-pointer transition-all hover:-translate-y-1 hover:scale-[1.02] hover:shadow-xl group">
-                <div className={`w-full h-[220px] bg-gradient-to-br ${DEST_GRADIENTS[i % DEST_GRADIENTS.length]} flex items-center justify-center text-4xl transition-transform group-hover:scale-110`}>
-                  {DEST_EMOJIS[dest.region] || '🌍'}
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-[#06080f]/90 via-transparent flex flex-col justify-end p-4">
-                  <div className="text-lg font-heading font-bold">{dest.name}</div>
-                  <div className="text-xs text-white/60">{dest.country}</div>
-                  <div className="text-xs text-teal-400 mt-1">From ${dest.avg_budget}</div>
-                </div>
-              </Link>
-            ))}
+        {/* Floating Metadata (Travel Orbit Concept) */}
+        <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden hidden md:block">
+          <div className="absolute top-[20%] left-[15%] glass-card px-4 py-2 flex items-center gap-2 animate-float">
+            <MapPin className="w-4 h-4 text-[#22D3A7]" />
+            <span className="text-xs font-semibold text-[#F8FAFC]">48.8566° N, 2.3522° E</span>
           </div>
-        )}
+          <div className="absolute bottom-[30%] right-[15%] glass-card px-4 py-2 flex items-center gap-2 animate-float-reverse">
+            <Compass className="w-4 h-4 text-[#7C5CFC]" />
+            <span className="text-xs font-semibold text-[#F8FAFC]">Optimizing route...</span>
+          </div>
+          
+          {/* Subtle curved paths */}
+          <svg className="absolute w-full h-full opacity-20" viewBox="0 0 1000 1000" preserveAspectRatio="none">
+            <path d="M 0,500 C 300,200 700,800 1000,500" stroke="url(#gradient)" strokeWidth="1" fill="none" className="animate-[pulse_4s_infinite]" />
+            <defs>
+              <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#22D3A7" stopOpacity="0" />
+                <stop offset="50%" stopColor="#22D3A7" stopOpacity="1" />
+                <stop offset="100%" stopColor="#7C5CFC" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+
+        {/* Hero Content */}
+        <div className="relative z-20 max-w-5xl mx-auto px-6 text-center mt-16">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card mb-8 animate-slide-up" style={{animationDelay: '0.1s'}}>
+            <Sparkles className="w-4 h-4 text-[#FFB86B]" />
+            <span className="text-xs font-semibold text-[#F8FAFC] tracking-wider uppercase">AI-Powered Travel Intelligence</span>
+          </div>
+          <h1 className="text-5xl md:text-7xl font-heading font-extrabold mb-6 leading-tight animate-slide-up" style={{animationDelay: '0.2s'}}>
+            Your next journey,<br />
+            <span className="gradient-text">intelligently planned.</span>
+          </h1>
+          <p className="text-lg md:text-xl text-[#94A3B8] max-w-2xl mx-auto mb-10 animate-slide-up" style={{animationDelay: '0.3s'}}>
+            Build unforgettable multi-city trips with AI-powered itineraries, smart budgets, and interactive planning tailored just for you.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-slide-up" style={{animationDelay: '0.4s'}}>
+            <Link href="/trips/new" className="w-full sm:w-auto px-8 py-4 rounded-xl gradient-btn flex items-center justify-center gap-2 text-lg group">
+              <Navigation className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+              Plan My Trip
+            </Link>
+            <Link href="/explore" className="w-full sm:w-auto px-8 py-4 rounded-xl glass-card hover:glass-card-hover flex items-center justify-center gap-2 text-[#F8FAFC] font-semibold text-lg transition-all">
+              <Compass className="w-5 h-5" />
+              Explore Destinations
+            </Link>
+          </div>
+        </div>
       </section>
 
-      {/* Previous Trips */}
-      <section className="mb-12">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-heading font-bold">Previous <span className="gradient-text">Trips</span></h2>
-          <Link href="/trips" className="text-sm text-white/50 hover:text-white border border-white/[0.08] px-4 py-1.5 rounded-xl transition-all">View All →</Link>
+      <div className="max-w-[1400px] mx-auto px-6 relative z-30 -mt-16">
+        {/* Search Bar */}
+        <div className="glass-card p-4 rounded-2xl flex flex-col md:flex-row items-center gap-4 mb-16 shadow-2xl animate-slide-up" style={{animationDelay: '0.5s'}}>
+          <div className="flex-1 w-full relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#94A3B8]" />
+            <input 
+              type="text" 
+              placeholder="Search for cities, countries, or regions..." 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full py-4 pl-12 pr-4 bg-[#0D1B2A]/50 border border-white/5 rounded-xl text-[#F8FAFC] placeholder:text-[#94A3B8] outline-none focus:border-[#22D3A7] transition-all"
+            />
+          </div>
+          <div className="flex w-full md:w-auto gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-none">
+            {REGIONS.slice(0, 4).map(r => (
+              <button key={r.value} onClick={() => setRegion(r.value)} className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${region === r.value ? 'bg-[#22D3A7]/20 text-[#22D3A7] border border-[#22D3A7]/30' : 'bg-[#132238] text-[#94A3B8] hover:text-[#F8FAFC] border border-white/5'}`}>
+                {r.label}
+              </button>
+            ))}
+          </div>
         </div>
-        {trips.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {trips.slice(0, 8).map((trip, i) => (
-              <Link href={`/trips/${trip.id}`} key={trip.id}
-                className="glass-card hover:glass-card-hover cursor-pointer overflow-hidden">
-                <div className={`h-[140px] bg-gradient-to-br ${DEST_GRADIENTS[i % DEST_GRADIENTS.length]} flex items-center justify-center text-3xl`}>
-                  {STATUS_EMOJIS[trip.status] || '📝'}
-                </div>
-                <div className="p-4">
-                  <div className="flex justify-between items-start mb-1">
-                    <span className="font-heading font-semibold text-sm">{trip.name}</span>
-                    <span className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full
-                      ${trip.status === 'ongoing' ? 'bg-teal-400/20 text-teal-400' : trip.status === 'completed' ? 'bg-green-400/20 text-green-400' : 'bg-white/10 text-white/60'}`}>
+
+        {/* Featured Destinations */}
+        <section className="mb-20">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl font-heading font-bold flex items-center gap-2">
+              <TrendingUp className="w-6 h-6 text-[#22D3A7]" />
+              Trending <span className="gradient-text">Destinations</span>
+            </h2>
+          </div>
+          
+          {loading ? (
+            <div className="flex gap-6 overflow-x-auto pb-8 snap-x">
+              {[1,2,3,4].map(n => <div key={n} className="min-w-[300px] h-[400px] rounded-2xl bg-[#0D1B2A] animate-pulse shrink-0" />)}
+            </div>
+          ) : (
+            <div className="flex gap-6 overflow-x-auto pb-8 snap-x scrollbar-thin">
+              {destinations.map((dest, i) => (
+                <Link href={`/trips/new?dest=${dest.id}`} key={dest.id} className="min-w-[300px] h-[400px] rounded-2xl relative overflow-hidden group snap-start cursor-pointer shrink-0">
+                  <img src={DEST_IMAGES[i % DEST_IMAGES.length]} alt={dest.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#07111F] via-[#07111F]/40 to-transparent" />
+                  
+                  {/* Floating badge */}
+                  <div className="absolute top-4 right-4 glass-card px-3 py-1.5 rounded-full flex items-center gap-1">
+                    <Star className="w-3.5 h-3.5 text-[#FFB86B] fill-[#FFB86B]" />
+                    <span className="text-xs font-bold">{dest.popularity}</span>
+                  </div>
+
+                  <div className="absolute bottom-0 left-0 right-0 p-6 transform transition-transform duration-300 group-hover:translate-y-[-8px]">
+                    <h3 className="text-2xl font-heading font-bold text-[#F8FAFC] mb-1">{dest.name}</h3>
+                    <div className="flex items-center gap-2 text-[#94A3B8] text-sm mb-3">
+                      <MapPin className="w-4 h-4" /> {dest.country}
+                    </div>
+                    <div className="flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <span className="text-[#22D3A7] font-semibold">Est. ${dest.avg_budget}</span>
+                      <span className="text-xs px-2 py-1 bg-white/10 rounded-md backdrop-blur-md text-white/90">Plan Route →</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* My Library / Recent Trips */}
+        <section className="mb-12">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl font-heading font-bold flex items-center gap-2">
+              <Calendar className="w-6 h-6 text-[#7C5CFC]" />
+              Your <span className="gradient-text">Travel Library</span>
+            </h2>
+            <Link href="/trips" className="text-sm font-medium text-[#94A3B8] hover:text-[#22D3A7] transition-colors">View All →</Link>
+          </div>
+
+          {trips.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {trips.slice(0, 4).map((trip) => (
+                <Link href={`/trips/${trip.id}`} key={trip.id} className="glass-card hover:glass-card-hover p-5 flex flex-col group">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="w-12 h-12 rounded-full bg-[#132238] flex items-center justify-center border border-white/5 group-hover:border-[#22D3A7]/30 transition-colors">
+                      <Compass className="w-6 h-6 text-[#22D3A7]" />
+                    </div>
+                    <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full ${trip.status === 'ongoing' ? 'bg-[#22D3A7]/10 text-[#22D3A7]' : 'bg-[#132238] text-[#94A3B8]'}`}>
                       {trip.status}
                     </span>
                   </div>
-                  <div className="text-xs text-white/40 mb-2">📍 {trip.destination_name} · {trip.duration_days} days</div>
-                  <div className="flex justify-between items-center pt-2 border-t border-white/[0.08]">
-                    <span className="text-teal-400 font-semibold text-sm">${trip.total_budget}</span>
-                    <span className="text-xs text-white/30">{trip.sections_count} sections</span>
+                  <h3 className="font-heading font-bold text-lg text-[#F8FAFC] mb-1 line-clamp-1">{trip.name}</h3>
+                  <div className="text-sm text-[#94A3B8] flex items-center gap-1.5 mb-4">
+                    <MapPin className="w-3.5 h-3.5" /> {trip.destination_name}
                   </div>
-                </div>
+                  <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
+                    <span className="text-[#F8FAFC] font-semibold">${trip.total_budget}</span>
+                    <span className="text-xs text-[#94A3B8]">{trip.duration_days} days</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="glass-card rounded-2xl p-12 text-center flex flex-col items-center border-dashed border-2 border-white/10">
+              <div className="w-16 h-16 rounded-full bg-[#132238] flex items-center justify-center mb-4">
+                <Navigation className="w-8 h-8 text-[#94A3B8]" />
+              </div>
+              <h3 className="text-xl font-heading font-bold text-[#F8FAFC] mb-2">Your next adventure starts here.</h3>
+              <p className="text-[#94A3B8] mb-6 max-w-md">You haven't planned any trips yet. Discover amazing destinations and let AI build your perfect itinerary.</p>
+              <Link href="/trips/new" className="px-6 py-3 rounded-xl gradient-btn inline-flex items-center gap-2">
+                <Sparkles className="w-4 h-4" /> Create First Trip
               </Link>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-16">
-            <div className="text-4xl mb-3 opacity-40">🧳</div>
-            <div className="text-white/50 mb-4">No trips yet! Start your first adventure.</div>
-            <Link href="/trips/new" className="inline-flex items-center gap-2 px-6 py-2 rounded-xl font-semibold gradient-btn">+ Plan Your First Trip</Link>
-          </div>
-        )}
-      </section>
-
-      {/* FAB */}
-      <Link href="/trips/new"
-        className="fixed bottom-8 right-8 z-50 flex items-center gap-2 px-6 py-3 rounded-full gradient-btn font-bold shadow-xl hover:-translate-y-1 hover:shadow-[0_0_50px_rgba(0,212,170,0.35)] transition-all">
-        ✈️ Plan a Trip
-      </Link>
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   );
 }

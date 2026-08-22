@@ -3,6 +3,18 @@
 @theme {
   --font-heading: var(--font-heading), 'Outfit', sans-serif;
   --font-body: var(--font-body), 'Inter', sans-serif;
+  
+  --color-primary: #22D3A7;
+  --color-secondary: #7C5CFC;
+  --color-warm: #FFB86B;
+  
+  --color-bg-base: #07111F;
+  --color-bg-surface: #0D1B2A;
+  --color-bg-elevated: #132238;
+  
+  --color-text-primary: #F8FAFC;
+  --color-text-secondary: #94A3B8;
+
   --color-glass-border: rgba(255, 255, 255, 0.08);
   --color-glass-border-hover: rgba(255, 255, 255, 0.15);
   --color-bg-card: rgba(255, 255, 255, 0.04);
@@ -47,6 +59,11 @@
   to { transform: rotate(360deg); }
 }
 
+@keyframes orbit {
+  from { transform: rotate(0deg) translateX(50px) rotate(0deg); }
+  to { transform: rotate(360deg) translateX(50px) rotate(-360deg); }
+}
+
 @utility animate-float {
   animation: float 20s ease-in-out infinite;
 }
@@ -71,9 +88,13 @@
   animation: scale-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+@utility animate-orbit {
+  animation: orbit 15s linear infinite;
+}
+
 /* ─── Glass Card ─── */
 @utility glass-card {
-  background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
+  background: linear-gradient(135deg, rgba(13, 27, 42, 0.6) 0%, rgba(7, 17, 31, 0.8) 100%);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
   backdrop-filter: blur(20px);
@@ -82,15 +103,15 @@
 }
 
 @utility glass-card-hover {
-  border-color: rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(34, 211, 167, 0.4);
+  background: rgba(19, 34, 56, 0.8);
   transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(34, 211, 167, 0.1);
 }
 
 /* ─── Gradient Text ─── */
 @utility gradient-text {
-  background: linear-gradient(135deg, #00d4aa 0%, #4facfe 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -98,43 +119,50 @@
 
 /* ─── Gradient Button ─── */
 @utility gradient-btn {
-  background: linear-gradient(135deg, #00d4aa 0%, #4facfe 100%);
-  color: #06080f;
-  box-shadow: 0 0 30px rgba(0, 212, 170, 0.15);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  color: var(--color-bg-base);
+  box-shadow: 0 4px 15px rgba(34, 211, 167, 0.3);
+  font-weight: 600;
+  transition: all 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 6px 25px rgba(34, 211, 167, 0.5);
+    transform: translateY(-1px);
+  }
 }
 
 /* ─── Custom scrollbar ─── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 9999px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
 
 /* ─── Form Inputs ─── */
 @utility gt-input {
   width: 100%;
-  padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.06);
+  padding: 12px 16px;
+  background: var(--color-bg-surface);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
-  color: white;
-  font-size: 0.9rem;
+  color: var(--color-text-primary);
+  font-size: 0.95rem;
   outline: none;
   transition: all 0.3s ease;
 }
 
 input:focus, select:focus, textarea:focus {
-  border-color: #00d4aa !important;
-  box-shadow: 0 0 0 3px rgba(0, 212, 170, 0.25) !important;
-  background: rgba(255, 255, 255, 0.10) !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px rgba(34, 211, 167, 0.15) !important;
+  background: var(--color-bg-elevated) !important;
 }
 
 input::placeholder, textarea::placeholder {
-  color: rgba(240, 242, 245, 0.4);
+  color: var(--color-text-secondary);
 }
 
 select {
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23888' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394A3B8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 12px center;
   padding-right: 36px;
